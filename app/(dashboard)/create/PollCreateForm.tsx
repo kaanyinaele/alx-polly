@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function PollCreateForm() {
+export default function PollCreateForm({ csrfToken }: { csrfToken: string }) {
   const [options, setOptions] = useState(["", ""]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -64,6 +64,9 @@ export default function PollCreateForm() {
           Add Option
         </Button>
       </div>
+      {/* Hidden CSRF token field for security */}
+      <Input type="hidden" name="csrf_token" value={csrfToken} />
+      
       {error && <div className="text-red-500">{error}</div>}
       {success && <div className="text-green-600">Poll created! Redirecting...</div>}
       <Button type="submit">Create Poll</Button>

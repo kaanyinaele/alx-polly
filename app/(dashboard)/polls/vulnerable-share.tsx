@@ -13,54 +13,77 @@ import {
 import { Copy, Share2, Twitter, Facebook, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-interface VulnerableShareProps {
+interface SecureShareProps {
   pollId: string;
   pollTitle: string;
 }
 
-export default function VulnerableShare({
+export default function SecureShare({
   pollId,
   pollTitle,
-}: VulnerableShareProps) {
+}: SecureShareProps) {
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
     // Generate the share URL
-    const baseUrl = window.location.origin;
-    const pollUrl = `${baseUrl}/polls/${pollId}`;
-    setShareUrl(pollUrl);
+    if (typeof window !== 'undefined') {
+      const baseUrl = window.location.origin;
+      // Sanitize inputs for URL construction
+      const sanitizedPollId = encodeURIComponent(pollId);
+      const pollUrl = `${baseUrl}/polls/${sanitizedPollId}`;
+      setShareUrl(pollUrl);
+    }
   }, [pollId]);
+
+  // Sanitize poll title to prevent XSS in share dialogs
+  const sanitizedTitle = pollTitle
+    ? pollTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    : 'A poll';
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard!");
+      if (navigator.clipboard && shareUrl) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied to clipboard!");
+      } else {
+        toast.error("Clipboard not available");
+      }
     } catch (err) {
       toast.error("Failed to copy link");
     }
   };
 
   const shareOnTwitter = () => {
-    const text = encodeURIComponent(`Check out this poll: ${pollTitle}`);
+    if (!shareUrl) return;
+    
+    const text = encodeURIComponent(`Check out this poll: ${sanitizedTitle}`);
     const url = encodeURIComponent(shareUrl);
-    window.open(
+    // Use rel="noopener noreferrer" equivalent in JS
+    const newWindow = window.open(
       `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-      "_blank",
+      "_blank"
     );
+    if (newWindow) newWindow.opener = null;
   };
 
   const shareOnFacebook = () => {
+    if (!shareUrl) return;
+    
     const url = encodeURIComponent(shareUrl);
-    window.open(
+    // Use rel="noopener noreferrer" equivalent in JS
+    const newWindow = window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-      "_blank",
+      "_blank"
     );
+    if (newWindow) newWindow.opener = null;
   };
 
   const shareViaEmail = () => {
-    const subject = encodeURIComponent(`Poll: ${pollTitle}`);
+    if (!shareUrl) return;
+    
+    const subject = encodeURIComponent(`Poll: ${sanitizedTitle}`);
     const body = encodeURIComponent(
-      `Hi! I'd like to share this poll with you: ${shareUrl}`,
+      `Hi! I'd like to share this poll with you: ${shareUrl}`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
