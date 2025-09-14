@@ -1,3 +1,5 @@
+// Registration page: validates matching passwords, calls server action to sign up,
+// and redirects to dashboard on success.
 'use client';
 
 import { useState } from 'react';

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function PollCreateForm({ csrfToken }: { csrfToken: string }) {
+  // Maintain at least two options
   const [options, setOptions] = useState(["", ""]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -25,6 +26,7 @@ export default function PollCreateForm({ csrfToken }: { csrfToken: string }) {
   return (
     <form
       action={async (formData) => {
+        // Server action submission with error feedback and redirect on success
         setError(null);
         setSuccess(false);
         const res = await createPoll(formData);
@@ -64,7 +66,7 @@ export default function PollCreateForm({ csrfToken }: { csrfToken: string }) {
           Add Option
         </Button>
       </div>
-      {/* Hidden CSRF token field for security */}
+      {/* Hidden CSRF token field for security; validated server-side in createPoll */}
       <Input type="hidden" name="csrf_token" value={csrfToken} />
       
       {error && <div className="text-red-500">{error}</div>}
@@ -72,4 +74,4 @@ export default function PollCreateForm({ csrfToken }: { csrfToken: string }) {
       <Button type="submit">Create Poll</Button>
     </form>
   );
-} 
+}

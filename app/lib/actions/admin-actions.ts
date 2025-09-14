@@ -3,7 +3,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
-// Function to check if a user is admin
+/**
+ * Guard that ensures the current user is an admin.
+ * Redirects to /login if unauthenticated, or /polls if not an admin.
+ * @returns true when access is allowed.
+ */
 export async function checkAdminAccess() {
   const supabase = await createClient();
   
@@ -25,7 +29,10 @@ export async function checkAdminAccess() {
   return true;
 }
 
-// Get all polls for admin (will be protected by the checkAdminAccess function)
+/**
+ * Fetch all polls for admin dashboard.
+ * Protected by checkAdminAccess.
+ */
 export async function getAdminPolls() {
   await checkAdminAccess(); // This will redirect if not admin
   
@@ -39,9 +46,28 @@ export async function getAdminPolls() {
   return { polls: data ?? [], error: null };
 }
 
-// Admin-level delete poll function
-export async function adminDeletePoll(pollId: string) {
+/**
+ * Admin-only delete for any poll by id.
+ * Protected by checkAdminAccess and CSRF.
+ * @param pollId The ID of the poll to delete.
+ * @param csrfToken The CSRF token for validation.
+ */
+export async function adminDeletePoll(pollId: string, csrfToken?: string) {
   await checkAdminAccess(); // This will redirect if not admin
+
+  // CSRF validation for parity with other destructive actions
+  try {
+    const { validateCsrfToken } = await import("@/app/lib/csrf");
+    if (!csrfToken) {
+      return { error: "Missing security token" };
+    }
+    const isValid = await validateCsrfToken(csrfToken);
+    if (!isValid) {
+      return { error: "Invalid security token. Please refresh the page and try again." };
+    }
+  } catch (e) {
+    return { error: "Security validation failed. Please try again." };
+  }
   
   const supabase = await createClient();
   const { error } = await supabase

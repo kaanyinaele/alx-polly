@@ -9,6 +9,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // If the user is already authenticated, send them to the dashboard
     if (!loading && user) {
       router.push('/polls');
     }
@@ -22,6 +23,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     return null; // Should already be redirected by useEffect
   }
 
+  // Basic shell for login/register pages
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="py-4 px-6 border-b bg-white">

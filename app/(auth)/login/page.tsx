@@ -1,3 +1,5 @@
+// Login page: collects credentials and calls the server action to create a Supabase session.
+// On success, navigates to the dashboard to load user context.
 'use client';
 
 import { useState } from 'react';

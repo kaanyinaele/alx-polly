@@ -1,13 +1,16 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
 
-// Generate a random CSRF token
+/**
+ * Generate a cryptographically secure CSRF token and set it as an HTTP-only cookie.
+ * Rotates the token hourly and marks it secure/sameSite to mitigate XSS/CSRF.
+ * @returns hex-encoded token string that can be embedded in a hidden form field.
+ */
 export async function generateCsrfToken(): Promise<string> {
   const token = crypto.randomBytes(32).toString('hex');
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   // Store the token in a HTTP-only cookie to prevent XSS attacks
   cookieStore.set('csrf_token', token, {
@@ -21,9 +24,12 @@ export async function generateCsrfToken(): Promise<string> {
   return token;
 }
 
-// Validate a CSRF token
+/**
+ * Compare a provided CSRF token against the one stored in cookies.
+ * On success, rotates the token to prevent replay.
+ */
 export async function validateCsrfToken(token: string): Promise<boolean> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const storedToken = cookieStore.get('csrf_token')?.value;
   
   if (!storedToken || !token || token !== storedToken) {
@@ -36,7 +42,10 @@ export async function validateCsrfToken(token: string): Promise<boolean> {
   return true;
 }
 
-// Middleware to verify CSRF token for state-changing operations
+/**
+ * Helper to enforce CSRF validation for state-changing server actions.
+ * Throws on failure to standardize error handling.
+ */
 export async function csrfProtection(formData: FormData) {
   const token = formData.get('csrf_token') as string;
   

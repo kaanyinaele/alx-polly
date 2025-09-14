@@ -1,5 +1,8 @@
 "use client";
 
+// Share widget for polls: builds a safe share URL, sanitizes inputs, and uses window.open with noopener semantics.
+// Includes copy-to-clipboard and social share helpers.
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

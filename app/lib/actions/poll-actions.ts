@@ -1,9 +1,14 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
-// CREATE POLL
+/**
+ * Create a new poll owned by the authenticated user.
+ * Performs CSRF validation, input sanitization, and basic constraints.
+ * @param formData - FormData containing: question (string), options (string[]), csrf_token (string)
+ * @returns { error: string | null }
+ */
 export async function createPoll(formData: FormData) {
   const supabase = await createClient();
 
@@ -97,7 +102,10 @@ export async function createPoll(formData: FormData) {
   return { error: null };
 }
 
-// GET USER POLLS
+/**
+ * Fetch polls created by the current authenticated user.
+ * @returns A list of polls or an error when unauthenticated or on query failure.
+ */
 export async function getUserPolls() {
   const supabase = await createClient();
   const {
@@ -115,7 +123,10 @@ export async function getUserPolls() {
   return { polls: data ?? [], error: null };
 }
 
-// GET POLL BY ID
+/**
+ * Get a single poll by id.
+ * @param id - The poll id.
+ */
 export async function getPollById(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -128,12 +139,32 @@ export async function getPollById(id: string) {
   return { poll: data, error: null };
 }
 
-// SUBMIT VOTE
-export async function submitVote(pollId: string, optionIndex: number) {
+/**
+ * Record a vote for a poll option by the current user.
+ * Enforces one-vote-per-user and validates the selected option index.
+ * @param pollId - The target poll id.
+ * @param optionIndex - Zero-based index of the selected option.
+ * @param csrfToken - Optional CSRF token for validation.
+ */
+export async function submitVote(pollId: string, optionIndex: number, csrfToken?: string) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  
+  // Optional: Enforce CSRF token if provided by the client (recommended)
+  try {
+    const { validateCsrfToken } = await import("@/app/lib/csrf");
+    if (!csrfToken) {
+      return { error: "Missing security token" };
+    }
+    const isValid = await validateCsrfToken(csrfToken);
+    if (!isValid) {
+      return { error: "Invalid security token. Please refresh and try again." };
+    }
+  } catch {
+    return { error: "Security validation failed. Please try again." };
+  }
   
   // Require login to vote - this prevents anonymous vote stuffing
   if (!user) return { error: "You must be logged in to vote." };
@@ -178,12 +209,36 @@ export async function submitVote(pollId: string, optionIndex: number) {
   ]);
 
   if (error) return { error: error.message };
+  
+  // Revalidate the poll detail page to reflect updated counts if using data cache
+  try {
+    revalidatePath(`/polls/${pollId}`);
+  } catch {}
   return { error: null };
 }
 
-// DELETE POLL
-export async function deletePoll(id: string) {
+/**
+ * Delete a poll if the current user is the owner.
+ * CSRF-protected to prevent cross-site request forgery.
+ * @param id - The poll id to delete.
+ * @param csrfToken - CSRF token provided by the client.
+ */
+export async function deletePoll(id: string, csrfToken?: string) {
   const supabase = await createClient();
+  
+  // CSRF validation (parity with other mutations)
+  try {
+    const { validateCsrfToken } = await import("@/app/lib/csrf");
+    if (!csrfToken) {
+      return { error: "Missing security token" };
+    }
+    const isValid = await validateCsrfToken(csrfToken);
+    if (!isValid) {
+      return { error: "Invalid security token. Please refresh the page and try again." };
+    }
+  } catch (e) {
+    return { error: "Security validation failed. Please try again." };
+  }
   
   // Get user from session
   const {
@@ -209,13 +264,34 @@ export async function deletePoll(id: string) {
   const { error } = await supabase.from("polls").delete().eq("id", id);
   if (error) return { error: error.message };
   
+  // Revalidate the list page
   revalidatePath("/polls");
   return { error: null };
 }
 
-// UPDATE POLL
+/**
+ * Update a poll's question and options, only by its owner.
+ * Performs validation and sanitization similar to createPoll.
+ * @param pollId - The poll id to update.
+ * @param formData - FormData with question and options.
+ */
 export async function updatePoll(pollId: string, formData: FormData) {
   const supabase = await createClient();
+
+  // Enforce CSRF validation similar to createPoll
+  try {
+    const csrfToken = formData.get("csrf_token") as string;
+    if (!csrfToken) {
+      return { error: "Missing security token" };
+    }
+    const { validateCsrfToken } = await import("@/app/lib/csrf");
+    const isValid = await validateCsrfToken(csrfToken);
+    if (!isValid) {
+      return { error: "Invalid security token. Please refresh the page and try again." };
+    }
+  } catch (error) {
+    return { error: "Security validation failed. Please try again." };
+  }
 
   const question = formData.get("question") as string;
   const options = formData.getAll("options").filter(Boolean) as string[];
@@ -305,6 +381,12 @@ export async function updatePoll(pollId: string, formData: FormData) {
   if (error) {
     return { error: error.message };
   }
+
+  // Revalidate relevant paths to reflect updates
+  try {
+    revalidatePath("/polls");
+    revalidatePath(`/polls/${pollId}`);
+  } catch {}
 
   return { error: null };
 }

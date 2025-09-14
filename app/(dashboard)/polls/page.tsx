@@ -1,10 +1,13 @@
+// Dashboard page listing polls owned by the authenticated user
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getUserPolls } from '@/app/lib/actions/poll-actions';
+import { generateCsrfToken } from '@/app/lib/csrf';
 import PollActions from './PollActions'; 
 
 export default async function PollsPage() {
   const { polls, error } = await getUserPolls();
+  const csrfToken = await generateCsrfToken();
 
   return (
     <div className="space-y-6">
@@ -16,7 +19,7 @@ export default async function PollsPage() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {polls && polls.length > 0 ? (
-          polls.map((poll) => <PollActions key={poll.id} poll={poll} />)
+          polls.map((poll) => <PollActions key={poll.id} poll={poll} csrfToken={csrfToken} />)
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center col-span-full">
             <h2 className="text-xl font-semibold mb-2">No polls yet</h2>

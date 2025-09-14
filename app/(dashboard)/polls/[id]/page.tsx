@@ -31,12 +31,24 @@ export default async function PollDetailPage({ params }: { params: { id: string 
     userVoted = !!votes && votes.length > 0;
   }
   
-  // Get vote counts for this poll
-  const { data: voteStats } = await supabase
+  // Get vote counts for this poll (manual aggregation)
+  const { data: voteRows } = await supabase
     .from('votes')
-    .select('option_index, count')
-    .eq('poll_id', params.id)
-    .group('option_index');
+    .select('option_index')
+    .eq('poll_id', params.id);
+
+  const counts: Record<number, number> = {};
+  if (Array.isArray(voteRows)) {
+    for (const row of voteRows) {
+      const idx = (row as any).option_index as number;
+      counts[idx] = (counts[idx] || 0) + 1;
+    }
+  }
+
+  const voteStats = Object.entries(counts).map(([option_index, count]) => ({
+    option_index: Number(option_index),
+    count: count as number,
+  }));
   
   // Add vote data to the poll
   const pollWithVotes = {

@@ -1,3 +1,4 @@
+// Admin dashboard: requires admin access via server action guard and lists all polls with delete controls.
 import { getAdminPolls, adminDeletePoll, checkAdminAccess } from "@/app/lib/actions/admin-actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { generateCsrfToken } from "@/app/lib/csrf";
 
 interface Poll {
   id: string;
@@ -22,6 +24,7 @@ export default async function AdminPage() {
   
   // Fetch polls securely from the server action
   const { polls, error } = await getAdminPolls();
+  const csrfToken = await generateCsrfToken();
 
   return (
     <div className="p-6 space-y-6">
@@ -62,7 +65,7 @@ export default async function AdminPage() {
                 </div>
                 <form action={async () => {
                   "use server";
-                  await adminDeletePoll(poll.id);
+                  await adminDeletePoll(poll.id, csrfToken);
                 }}>
                   <Button
                     variant="destructive"

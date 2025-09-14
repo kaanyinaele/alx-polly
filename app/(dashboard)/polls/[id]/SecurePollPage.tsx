@@ -29,6 +29,7 @@ interface SecurePollPageProps {
 }
 
 export default function SecurePollPage({ poll, userVoted: initialUserVoted, csrfToken }: SecurePollPageProps) {
+  // Track the currently selected option and whether the user has already voted
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState(initialUserVoted);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +37,7 @@ export default function SecurePollPage({ poll, userVoted: initialUserVoted, csrf
   const { user } = useAuth();
   const router = useRouter();
   
-  // Process vote data for display
+  // Aggregate votes for result bars
   const votesByOption: Record<number, number> = {};
   
   // Initialize all options to 0 votes
@@ -64,12 +65,8 @@ export default function SecurePollPage({ poll, userVoted: initialUserVoted, csrf
     setIsSubmitting(true);
     setErrorMessage(null);
     
-    // Add CSRF token to form data
-    const formData = new FormData();
-    formData.append('csrf_token', csrfToken);
-    
     try {
-      const result = await submitVote(poll.id, selectedOption);
+      const result = await submitVote(poll.id, selectedOption, csrfToken);
       
       if (result.error) {
         setErrorMessage(result.error);

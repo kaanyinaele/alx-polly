@@ -20,12 +20,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Protect all dashboard routes: redirect unauthenticated users to login
     if (!loading && !user) {
       router.push("/login");
     }
   }, [user, loading, router]);
 
   const handleSignOut = async () => {
+    // Invoke Supabase sign-out and return to login
     await signOut();
     router.push("/login");
   };
@@ -42,6 +44,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
+  // Shell for dashboard pages: header with navigation and profile menu
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="border-b bg-white sticky top-0 z-10">

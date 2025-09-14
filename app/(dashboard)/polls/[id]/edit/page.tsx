@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 // Import the client component
 import EditPollForm from './EditPollForm';
 import { createClient } from '@/lib/supabase/server';
+import { generateCsrfToken } from '@/app/lib/csrf';
 
 export default async function EditPollPage({ params }: { params: { id: string } }) {
   const { poll, error } = await getPollById(params.id);
@@ -21,10 +22,13 @@ export default async function EditPollPage({ params }: { params: { id: string } 
     redirect(`/polls/${params.id}`);
   }
 
+  // Generate CSRF token for the edit form
+  const csrfToken = await generateCsrfToken();
+
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Edit Poll</h1>
-      <EditPollForm poll={poll} />
+      <EditPollForm poll={poll} csrfToken={csrfToken} />
     </div>
   );
 }

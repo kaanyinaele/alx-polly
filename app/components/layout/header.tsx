@@ -1,5 +1,9 @@
 'use client';
 
+// Header navigation for authenticated/guest users.
+// Highlights current route and exposes profile menu when authenticated.
+// TODO: Replace the Logout link with a real sign-out action wired to Supabase.
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -12,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { logout } from '@/app/lib/actions/auth-actions';
 
 interface HeaderProps {
   user?: {
@@ -95,7 +100,9 @@ export function Header({ user }: HeaderProps) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <Link href="/login" className="w-full">Logout</Link>
+                    <form action={logout} className="w-full">
+                      <button type="submit" className="w-full text-left">Logout</button>
+                    </form>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

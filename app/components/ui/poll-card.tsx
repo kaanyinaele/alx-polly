@@ -1,3 +1,5 @@
+// Displays a summary card for a poll (option count, total votes, created date)
+// and links to the poll detail page.
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Poll } from '@/app/lib/types';

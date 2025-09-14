@@ -1,3 +1,6 @@
+// filepath: /home/kaanyi/alx-polly/app/layout.tsx
+// Root layout: wires global fonts, styles, and wraps the app with AuthProvider for client auth state.
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

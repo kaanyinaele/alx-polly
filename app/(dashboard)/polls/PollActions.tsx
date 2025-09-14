@@ -14,13 +14,14 @@ interface Poll {
 
 interface PollActionsProps {
   poll: Poll;
+  csrfToken: string;
 }
 
-export default function PollActions({ poll }: PollActionsProps) {
+export default function PollActions({ poll, csrfToken }: PollActionsProps) {
   const { user } = useAuth();
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this poll?")) {
-      await deletePoll(poll.id);
+      await deletePoll(poll.id, csrfToken);
       window.location.reload();
     }
   };
@@ -39,6 +40,7 @@ export default function PollActions({ poll }: PollActionsProps) {
           </div>
         </div>
       </Link>
+      {/* Owner-only controls: edit/delete */}
       {user && user.id === poll.user_id && (
         <div className="flex gap-2 p-2">
           <Button asChild variant="outline" size="sm">

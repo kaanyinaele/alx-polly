@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function EditPollForm({ poll }: { poll: any }) {
+export default function EditPollForm({ poll, csrfToken }: { poll: any; csrfToken: string }) {
+  // Controlled inputs for question and options
   const [question, setQuestion] = useState(poll.question);
   const [options, setOptions] = useState<string[]>(poll.options || []);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Generate CSRF token via prop supplied by server page
 
   const handleOptionChange = (idx: number, value: string) => {
     setOptions((opts) => opts.map((opt, i) => (i === idx ? value : opt)));
@@ -26,6 +29,7 @@ export default function EditPollForm({ poll }: { poll: any }) {
   return (
     <form
       action={async (formData) => {
+        // Normalize form data before sending to the server action
         setError(null);
         setSuccess(false);
         formData.set('question', question);
@@ -76,6 +80,7 @@ export default function EditPollForm({ poll }: { poll: any }) {
       </div>
       {error && <div className="text-red-500">{error}</div>}
       {success && <div className="text-green-600">Poll updated! Redirecting...</div>}
+      <input type="hidden" name="csrf_token" value={csrfToken} />
       <Button type="submit">Update Poll</Button>
     </form>
   );
