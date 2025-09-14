@@ -21,12 +21,6 @@ interface PollActionsProps {
 
 export default function PollActions({ poll, csrfToken }: PollActionsProps) {
   const { user } = useAuth();
-  const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this poll?")) {
-      await deletePoll(poll.id, csrfToken);
-      window.location.reload();
-    }
-  };
 
   return (
     <Card className="flex flex-col">
@@ -45,9 +39,13 @@ export default function PollActions({ poll, csrfToken }: PollActionsProps) {
           <Button asChild variant="ghost" size="icon">
             <Link href={`/polls/${poll.id}/edit`}><Edit className="h-4 w-4" /></Link>
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleDelete} className="text-destructive hover:text-destructive">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <form action={deletePoll}>
+            <input type="hidden" name="poll_id" value={poll.id} />
+            <input type="hidden" name="csrf_token" value={csrfToken} />
+            <Button variant="ghost" size="icon" type="submit" className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </form>
         </CardFooter>
       )}
     </Card>
