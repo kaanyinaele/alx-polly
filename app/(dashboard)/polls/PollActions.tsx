@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useAuth } from "@/app/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { deletePoll } from "@/app/lib/actions/poll-actions";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit, Trash2 } from "lucide-react";
 
 interface Poll {
   id: string;
@@ -27,30 +29,27 @@ export default function PollActions({ poll, csrfToken }: PollActionsProps) {
   };
 
   return (
-    <div className="border rounded-md shadow-md hover:shadow-lg transition-shadow bg-white">
-      <Link href={`/polls/${poll.id}`}>
-        <div className="group p-4">
-          <div className="h-full">
-            <div>
-              <h2 className="group-hover:text-blue-600 transition-colors font-bold text-lg">
-                {poll.question}
-              </h2>
-              <p className="text-slate-500">{poll.options.length} options</p>
-            </div>
-          </div>
-        </div>
-      </Link>
-      {/* Owner-only controls: edit/delete */}
+    <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle className="text-lg">
+          <Link href={`/polls/${poll.id}`} className="hover:underline">
+            {poll.question}
+          </Link>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <p className="text-sm text-muted-foreground">{poll.options.length} options</p>
+      </CardContent>
       {user && user.id === poll.user_id && (
-        <div className="flex gap-2 p-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/polls/${poll.id}/edit`}>Edit</Link>
+        <CardFooter className="flex justify-end gap-2">
+          <Button asChild variant="ghost" size="icon">
+            <Link href={`/polls/${poll.id}/edit`}><Edit className="h-4 w-4" /></Link>
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete}>
-            Delete
+          <Button variant="ghost" size="icon" onClick={handleDelete} className="text-destructive hover:text-destructive">
+            <Trash2 className="h-4 w-4" />
           </Button>
-        </div>
+        </CardFooter>
       )}
-    </div>
+    </Card>
   );
 }

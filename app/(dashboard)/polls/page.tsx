@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { getUserPolls } from '@/app/lib/actions/poll-actions';
 import { generateCsrfToken } from '@/app/lib/csrf';
 import PollActions from './PollActions'; 
+import { FilePlusIcon } from 'lucide-react';
 
 export default async function PollsPage() {
   const { polls, error } = await getUserPolls();
@@ -21,9 +22,10 @@ export default async function PollsPage() {
         {polls && polls.length > 0 ? (
           polls.map((poll) => <PollActions key={poll.id} poll={poll} csrfToken={csrfToken} />)
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center col-span-full">
-            <h2 className="text-xl font-semibold mb-2">No polls yet</h2>
-            <p className="text-slate-500 mb-6">Create your first poll to get started</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center col-span-full border-2 border-dashed rounded-lg">
+            <FilePlusIcon className="w-16 h-16 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mt-4">No polls yet</h2>
+            <p className="text-muted-foreground mt-2 mb-6">Create your first poll to get started</p>
             <Button asChild>
               <Link href="/create">Create New Poll</Link>
             </Button>
